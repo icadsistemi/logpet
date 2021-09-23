@@ -21,6 +21,6 @@ type StandardLogger struct {
 // Log is a type containing log message and level
 type Log struct {
 	Message      string
-	CustomFields map[string]interface{}
+	CustomFields map[string]string
 	Level        logrus.Level
 }
