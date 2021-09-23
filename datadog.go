@@ -170,7 +170,7 @@ func (l *StandardLogger) startLogRoutineListener() {
 		newLog.Level = logElem.Level
 		newLog.Time = time.Now()
 
-		for key, value := range l.CustomFields {
+		for key, value := range logElem.CustomFields {
 			newLog.Data[key] = value
 		}
 
