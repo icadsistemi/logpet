@@ -170,7 +170,9 @@ func (l *StandardLogger) startLogRoutineListener() {
 		newLog.Level = logElem.Level
 		newLog.Time = time.Now()
 
-		newLog = newLog.WithFields(l.CustomFields)
+		for key, value := range l.CustomFields {
+			newLog.Data[key] = value
+		}
 
 		// If sendDebugLogs is true print the log with Println
 		if l.sendDebugLogs || l.localMode {
