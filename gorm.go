@@ -25,12 +25,8 @@ func (gLogger *GormLogger) Print(v ...interface{}) {
 			"rows_affected": strconv.FormatInt(v[5].(int64), 10),
 		}
 
-		if queryDuration, ok := v[2].(time.Duration); ok && queryDuration >= time.Second {
-			gLogger.Logger.SendErrLog(v[3].(string), fields)
-		} else {
-			gLogger.Logger.SendDebugfLog(v[2].(string), fields)
-		}
+		gLogger.Logger.SendDebugfLog(v[3].(string), fields)
 	case "log":
-		gLogger.Logger.SendInfofLog(v[2].(string), nil)
+		gLogger.Logger.SendInfofLog(v[3].(string), nil)
 	}
 }
