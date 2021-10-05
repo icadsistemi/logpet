@@ -1,6 +1,7 @@
 package logpet
 
 import (
+	"strconv"
 	"time"
 )
 
@@ -21,7 +22,7 @@ func (gLogger *GormLogger) Print(v ...interface{}) {
 			"section":       "database",
 			"query_time":    v[2].(time.Duration).String(),
 			"function_line": v[1].(string),
-			"rows_affected": v[5].(string),
+			"rows_affected": strconv.FormatInt(v[5].(int64), 10),
 		}
 
 		if queryDuration, ok := v[2].(time.Duration); ok && queryDuration >= time.Second {
