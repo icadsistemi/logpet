@@ -19,7 +19,7 @@ func (gLogger *GormLogger) Print(v ...interface{}) {
 	case "sql":
 		fields := map[string]string{
 			"section":       "database",
-			"query_time":    v[2].(string),
+			"query_time":    v[2].(time.Duration).String(),
 			"function_line": v[1].(string),
 			"rows_affected": v[5].(string),
 		}
