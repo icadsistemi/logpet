@@ -83,7 +83,7 @@ func (l *StandardLogger) SetUpCustomHTTPClient(httpClient *http.Client) error {
 }
 
 // SendInfoLog sends a log with info level to the log channel
-func (l *StandardLogger) SendInfoLog(message string, customFields map[string]string) {
+func (l *StandardLogger) SendInfoLog(message string, customFields map[string]interface{}) {
 	l.logChan <- Log{
 		Message:      message,
 		CustomFields: customFields,
@@ -92,12 +92,12 @@ func (l *StandardLogger) SendInfoLog(message string, customFields map[string]str
 }
 
 // SendInfofLog sends a formatted log with info level to the log channel
-func (l *StandardLogger) SendInfofLog(message string, customFields map[string]string, args ...interface{}) {
+func (l *StandardLogger) SendInfofLog(message string, customFields map[string]interface{}, args ...interface{}) {
 	l.SendInfoLog(fmt.Sprintf(message, args...), customFields)
 }
 
 // SendWarnLog sends a log with warning level to the log channel
-func (l *StandardLogger) SendWarnLog(message string, customFields map[string]string) {
+func (l *StandardLogger) SendWarnLog(message string, customFields map[string]interface{}) {
 	l.logChan <- Log{
 		Message:      message,
 		CustomFields: customFields,
@@ -106,12 +106,12 @@ func (l *StandardLogger) SendWarnLog(message string, customFields map[string]str
 }
 
 // SendWarnfLog sends a formatted log with warn level to the log channel
-func (l *StandardLogger) SendWarnfLog(message string, customFields map[string]string, args ...interface{}) {
+func (l *StandardLogger) SendWarnfLog(message string, customFields map[string]interface{}, args ...interface{}) {
 	l.SendWarnLog(fmt.Sprintf(message, args...), customFields)
 }
 
 // SendErrLog sends a log with error level to the log channel
-func (l *StandardLogger) SendErrLog(message string, customFields map[string]string) {
+func (l *StandardLogger) SendErrLog(message string, customFields map[string]interface{}) {
 	l.logChan <- Log{
 		Message:      message,
 		CustomFields: customFields,
@@ -120,12 +120,12 @@ func (l *StandardLogger) SendErrLog(message string, customFields map[string]stri
 }
 
 // SendErrfLog sends a formatted log with error level to the log channel
-func (l *StandardLogger) SendErrfLog(message string, customFields map[string]string, args ...interface{}) {
+func (l *StandardLogger) SendErrfLog(message string, customFields map[string]interface{}, args ...interface{}) {
 	l.SendErrLog(fmt.Sprintf(message, args...), customFields)
 }
 
 // SendDebugLog sends a log with debug level to the log channel
-func (l *StandardLogger) SendDebugLog(message string, customFields map[string]string) {
+func (l *StandardLogger) SendDebugLog(message string, customFields map[string]interface{}) {
 	l.logChan <- Log{
 		Message:      message,
 		CustomFields: customFields,
@@ -134,12 +134,12 @@ func (l *StandardLogger) SendDebugLog(message string, customFields map[string]st
 }
 
 // SendDebugfLog sends a formatted log with debug level to the log channel
-func (l *StandardLogger) SendDebugfLog(message string, customFields map[string]string, args ...interface{}) {
+func (l *StandardLogger) SendDebugfLog(message string, customFields map[string]interface{}, args ...interface{}) {
 	l.SendDebugLog(fmt.Sprintf(message, args...), customFields)
 }
 
 // SendFatalLog sends a log with fatal level to the log channel
-func (l *StandardLogger) SendFatalLog(message string, customFields map[string]string) {
+func (l *StandardLogger) SendFatalLog(message string, customFields map[string]interface{}) {
 	l.logChan <- Log{
 		Message:      message,
 		CustomFields: customFields,
@@ -148,7 +148,7 @@ func (l *StandardLogger) SendFatalLog(message string, customFields map[string]st
 }
 
 // SendFatalfLog sends a formatted log with fatal level to the log channel
-func (l *StandardLogger) SendFatalfLog(message string, customFields map[string]string, args ...interface{}) {
+func (l *StandardLogger) SendFatalfLog(message string, customFields map[string]interface{}, args ...interface{}) {
 	l.SendFatalLog(fmt.Sprintf(message, args...), customFields)
 }
 

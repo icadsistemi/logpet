@@ -1,6 +1,7 @@
 package logpet
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -18,11 +19,17 @@ func (gLogger *GormLogger) Print(v ...interface{}) {
 
 	switch v[0] {
 	case "sql":
-		fields := map[string]string{
-			"section":       "database",
-			"query_time":    v[2].(time.Duration).String(),
-			"function_line": v[1].(string),
+
+		queryfields := map[string]string{
+			"time":          v[2].(time.Duration).String(),
+			"arguments":     fmt.Sprintf("%v", v[4]),
 			"rows_affected": strconv.FormatInt(v[5].(int64), 10),
+			"function_line": v[1].(string),
+		}
+
+		fields := map[string]interface{}{
+			"section": "database",
+			"query":   queryfields,
 		}
 
 		gLogger.Logger.SendDebugfLog(v[3].(string), fields)
