@@ -9,13 +9,14 @@ import (
 // StandardLogger is a new type useful to add new methods for default log formats.
 type StandardLogger struct {
 	*logrus.Logger
-	CustomFields  map[string]interface{}
-	logChan       chan Log
-	ddAPIKey      string
-	ddEndpoint    string
-	sendDebugLogs bool
-	localMode     bool
-	httpClient    *http.Client
+	CustomFields    map[string]interface{}
+	logChan         chan Log
+	ddAPIKey        string
+	ddEndpoint      string
+	sendDebugLogs   bool
+	localMode       bool
+	httpClient      *http.Client
+	offlineLogsPath string
 }
 
 // Log is a type containing log message and level

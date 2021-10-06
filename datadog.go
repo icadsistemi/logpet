@@ -14,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (l *StandardLogger) SetupDataDogLogger(datadogEndpoint, datadogAPIKey string, sendDebugLogs, localmode bool) error {
+func (l *StandardLogger) SetupDataDogLogger(datadogEndpoint, datadogAPIKey, offlineLogsPath string, sendDebugLogs, localmode bool) error {
 
 	// if provided endpoint is empty we fallback to the default one
 	if datadogEndpoint == "" {
@@ -29,6 +29,9 @@ func (l *StandardLogger) SetupDataDogLogger(datadogEndpoint, datadogAPIKey strin
 	if l.logChan == nil {
 		l.initChannel()
 	}
+
+	// offline logs path
+	l.offlineLogsPath = offlineLogsPath
 
 	// set debug mode with provided value
 	l.SetDebugMode(sendDebugLogs)
@@ -155,7 +158,6 @@ func (l *StandardLogger) SendFatalfLog(message string, customFields map[string]i
 // startLogRoutineListener handles the incoming logs
 func (l *StandardLogger) startLogRoutineListener() {
 	var logWriter io.Writer
-	// var httpClient http.Client
 	l.SetOutput(logWriter)
 
 	for logElem := range l.logChan {
@@ -176,21 +178,23 @@ func (l *StandardLogger) startLogRoutineListener() {
 			newLog.Data[key] = value
 		}
 
-		// If sendDebugLogs is true print the log with Println
-		if l.sendDebugLogs || l.localMode {
-			logBytes, err := newLog.Bytes()
-			if err != nil {
-				l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
-				continue
-			}
-
-			fmt.Println(string(logBytes))
+		logBytes, err := newLog.Bytes()
+		if err != nil {
+			l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
+			continue
 		}
 
-		// Performing http request to datadog
-		if !l.localMode {
+		// If localMode is true print the log with Println
+		if l.localMode {
+			fmt.Println(string(logBytes))
+		} else {
 			err := l.sendLogToDD(newLog, l.httpClient)
 			if err != nil {
+				err = l.saveLogToFile(logBytes, fmt.Sprintf("log-%s.json", time.Now().Format(time.RFC3339Nano)))
+				if err != nil {
+					fmt.Println(err)
+				}
+
 				log.Printf("unable to send log to DataDog, %v", err)
 				continue
 			}
