@@ -2,6 +2,8 @@ package logpet
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -39,12 +41,11 @@ func (l *StandardLogger) saveLogToFile(toSave []byte, filename string) error {
 	return nil
 }
 
-func (l *StandardLogger) SendLogs() {
+func (l *StandardLogger) SendOfflineLogs() error {
 
 	dir, err := ioutil.ReadDir(l.offlineLogsPath)
 	if err != nil {
-		l.SendErrfLog("unable to read log directory, %v", nil, err)
-		return
+		return errors.New(fmt.Sprintf("unable to open directory %s, %v", l.offlineLogsPath, err))
 	}
 
 	for _, logfile := range dir {
@@ -98,4 +99,6 @@ func (l *StandardLogger) SendLogs() {
 			}
 		}
 	}
+
+	return nil
 }
