@@ -25,3 +25,9 @@ type Log struct {
 	CustomFields map[string]interface{}
 	Level        logrus.Level
 }
+
+// ClientLog is a struct used for offline logs
+type ClientLog struct {
+	Level   string `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
+}

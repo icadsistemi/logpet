@@ -8,8 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 )
 
 func (l *StandardLogger) saveLogToFile(toSave []byte, filename string) error {
@@ -60,7 +58,7 @@ func (l *StandardLogger) SendOfflineLogs() error {
 				continue
 			}
 
-			var logs Log
+			var logs ClientLog
 
 			err = json.NewDecoder(file).Decode(&logs)
 			if err != nil {
@@ -75,15 +73,15 @@ func (l *StandardLogger) SendOfflineLogs() error {
 			}
 
 			switch logs.Level {
-			case logrus.InfoLevel:
+			case "info":
 				l.SendInfoLog(logs.Message, nil)
-			case logrus.WarnLevel:
+			case "warning":
 				l.SendWarnLog(logs.Message, nil)
-			case logrus.ErrorLevel:
+			case "error":
 				l.SendErrLog(logs.Message, nil)
-			case logrus.DebugLevel:
+			case "debug":
 				l.SendDebugLog(logs.Message, nil)
-			case logrus.FatalLevel:
+			case "fatal":
 				l.SendErrfLog("EX FATAL | %s", nil, logs.Message)
 			}
 
