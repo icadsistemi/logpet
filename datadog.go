@@ -190,6 +190,15 @@ func (l *StandardLogger) startLogRoutineListener() {
 		} else {
 			err := l.sendLogToDD(newLog, l.httpClient)
 			if err != nil {
+
+				newLog.Message = fmt.Sprintf("OFFLINE LOG at %v | %s", time.Now().String(), newLog.Message)
+
+				logBytes, err = newLog.Bytes()
+				if err != nil {
+					l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
+					continue
+				}
+
 				err = l.saveLogToFile(logBytes, fmt.Sprintf("log-%s.json", time.Now().Format(time.RFC3339Nano)))
 				if err != nil {
 					fmt.Println(err)
