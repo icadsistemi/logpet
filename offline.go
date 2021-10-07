@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+func (l *StandardLogger) EnableOfflineLogs(enable bool) {
+	l.saveOfflineLogs = enable
+}
+
 func (l *StandardLogger) saveLogToFile(toSave []byte, filename string) error {
 
 	_, err := os.Stat(l.offlineLogsPath)

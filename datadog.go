@@ -31,7 +31,10 @@ func (l *StandardLogger) SetupDataDogLogger(datadogEndpoint, datadogAPIKey, offl
 	}
 
 	// offline logs path
-	l.offlineLogsPath = offlineLogsPath
+	if offlineLogsPath != "" {
+		l.offlineLogsPath = offlineLogsPath
+		l.EnableOfflineLogs(true)
+	}
 
 	// set debug mode with provided value
 	l.SetDebugMode(sendDebugLogs)
@@ -191,17 +194,19 @@ func (l *StandardLogger) startLogRoutineListener() {
 			err := l.sendLogToDD(newLog, l.httpClient)
 			if err != nil {
 
-				newLog.Message = fmt.Sprintf("OFFLINE LOG at %v | %s", time.Now().String(), newLog.Message)
+				if l.saveOfflineLogs {
+					newLog.Message = fmt.Sprintf("OFFLINE LOG at %v | %s", time.Now().String(), newLog.Message)
 
-				logBytes, err = newLog.Bytes()
-				if err != nil {
-					l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
-					continue
-				}
+					logBytes, err = newLog.Bytes()
+					if err != nil {
+						l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
+						continue
+					}
 
-				err = l.saveLogToFile(logBytes, fmt.Sprintf("log-%s.json", time.Now().Format(time.RFC3339Nano)))
-				if err != nil {
-					fmt.Println(err)
+					err = l.saveLogToFile(logBytes, fmt.Sprintf("log-%s.json", time.Now().Format(time.RFC3339Nano)))
+					if err != nil {
+						fmt.Println(err)
+					}
 				}
 
 				log.Printf("unable to send log to DataDog, %v", err)

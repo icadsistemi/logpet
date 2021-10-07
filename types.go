@@ -16,6 +16,7 @@ type StandardLogger struct {
 	sendDebugLogs   bool
 	localMode       bool
 	httpClient      *http.Client
+	saveOfflineLogs bool
 	offlineLogsPath string
 }
 
