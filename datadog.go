@@ -90,11 +90,13 @@ func (l *StandardLogger) SetUpCustomHTTPClient(httpClient *http.Client) error {
 
 // SendInfoLog sends a log with info level to the log channel
 func (l *StandardLogger) SendInfoLog(message string, customFields map[string]interface{}) {
-	l.logChan <- Log{
-		Message:      message,
-		CustomFields: customFields,
-		Level:        logrus.InfoLevel,
-	}
+	go func() {
+		l.logChan <- Log{
+			Message:      message,
+			CustomFields: customFields,
+			Level:        logrus.InfoLevel,
+		}
+	}()
 }
 
 // SendInfofLog sends a formatted log with info level to the log channel
@@ -104,11 +106,13 @@ func (l *StandardLogger) SendInfofLog(message string, customFields map[string]in
 
 // SendWarnLog sends a log with warning level to the log channel
 func (l *StandardLogger) SendWarnLog(message string, customFields map[string]interface{}) {
-	l.logChan <- Log{
-		Message:      message,
-		CustomFields: customFields,
-		Level:        logrus.WarnLevel,
-	}
+	go func() {
+		l.logChan <- Log{
+			Message:      message,
+			CustomFields: customFields,
+			Level:        logrus.WarnLevel,
+		}
+	}()
 }
 
 // SendWarnfLog sends a formatted log with warn level to the log channel
@@ -118,11 +122,13 @@ func (l *StandardLogger) SendWarnfLog(message string, customFields map[string]in
 
 // SendErrLog sends a log with error level to the log channel
 func (l *StandardLogger) SendErrLog(message string, customFields map[string]interface{}) {
-	l.logChan <- Log{
-		Message:      message,
-		CustomFields: customFields,
-		Level:        logrus.ErrorLevel,
-	}
+	go func() {
+		l.logChan <- Log{
+			Message:      message,
+			CustomFields: customFields,
+			Level:        logrus.ErrorLevel,
+		}
+	}()
 }
 
 // SendErrfLog sends a formatted log with error level to the log channel
@@ -132,11 +138,13 @@ func (l *StandardLogger) SendErrfLog(message string, customFields map[string]int
 
 // SendDebugLog sends a log with debug level to the log channel
 func (l *StandardLogger) SendDebugLog(message string, customFields map[string]interface{}) {
-	l.logChan <- Log{
-		Message:      message,
-		CustomFields: customFields,
-		Level:        logrus.DebugLevel,
-	}
+	go func() {
+		l.logChan <- Log{
+			Message:      message,
+			CustomFields: customFields,
+			Level:        logrus.DebugLevel,
+		}
+	}()
 }
 
 // SendDebugfLog sends a formatted log with debug level to the log channel
@@ -146,11 +154,13 @@ func (l *StandardLogger) SendDebugfLog(message string, customFields map[string]i
 
 // SendFatalLog sends a log with fatal level to the log channel
 func (l *StandardLogger) SendFatalLog(message string, customFields map[string]interface{}) {
-	l.logChan <- Log{
-		Message:      message,
-		CustomFields: customFields,
-		Level:        logrus.FatalLevel,
-	}
+	go func() {
+		l.logChan <- Log{
+			Message:      message,
+			CustomFields: customFields,
+			Level:        logrus.FatalLevel,
+		}
+	}()
 }
 
 // SendFatalfLog sends a formatted log with fatal level to the log channel
