@@ -16,9 +16,21 @@ type GormLogger struct {
 
 // Print handles log events from Gorm for the custom logger.
 func (gLogger *GormLogger) Print(v ...interface{}) {
+	fields := map[string]interface{}{
+		"section": "database",
+	}
+
+	if v != nil {
+		return
+	}
 
 	switch v[0] {
 	case "sql":
+
+		if len(v) != 6 {
+			gLogger.Logger.SendErrfLog("wrong db log format, %v", fields, v)
+			return
+		}
 
 		queryfields := map[string]string{
 			"execution_time": v[2].(time.Duration).String(),
@@ -27,13 +39,20 @@ func (gLogger *GormLogger) Print(v ...interface{}) {
 			"function_line":  v[1].(string),
 		}
 
-		fields := map[string]interface{}{
-			"section": "database",
-			"query":   queryfields,
-		}
+		fields["query"] = queryfields
 
 		gLogger.Logger.SendDebugfLog(v[3].(string), fields)
 	case "log":
-		gLogger.Logger.SendInfofLog(v[3].(string), nil)
+		if len(v) != 3 {
+			gLogger.Logger.SendErrfLog("wrong db log format, %v", fields, v)
+			return
+		}
+
+		queryfields := map[string]string{
+			"function_line": v[1].(string),
+		}
+
+		fields["query"] = queryfields
+		gLogger.Logger.SendWarnfLog("%v", fields, v[2])
 	}
 }
