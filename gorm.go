@@ -20,7 +20,8 @@ func (gLogger *GormLogger) Print(v ...interface{}) {
 		"section": "database",
 	}
 
-	if v != nil {
+	if nil == v {
+		gLogger.Logger.SendDebugLog("v database arguments are empty", fields)
 		return
 	}
 
