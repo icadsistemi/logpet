@@ -203,6 +203,7 @@ func (l *StandardLogger) startLogRoutineListener() {
 		} else {
 			err := l.sendLogToDD(newLog, l.httpClient)
 			if err != nil {
+				log.Printf("unable to send log to DataDog, %v", err)
 				if l.saveOfflineLogs {
 					var offsaveErr error
 
@@ -210,7 +211,7 @@ func (l *StandardLogger) startLogRoutineListener() {
 
 					logBytes, offsaveErr = newLog.Bytes()
 					if err != nil {
-						l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
+						l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", offsaveErr), nil)
 						continue
 					}
 
@@ -220,7 +221,6 @@ func (l *StandardLogger) startLogRoutineListener() {
 					}
 				}
 
-				log.Printf("unable to send log to DataDog, %v", err)
 				continue
 			}
 		}
