@@ -204,17 +204,19 @@ func (l *StandardLogger) startLogRoutineListener() {
 			err := l.sendLogToDD(newLog, l.httpClient)
 			if err != nil {
 				if l.saveOfflineLogs {
+					var offsaveErr error
+
 					newLog.Message = fmt.Sprintf("OFFLINE LOG at %v | %s", time.Now().String(), newLog.Message)
 
-					logBytes, err = newLog.Bytes()
+					logBytes, offsaveErr = newLog.Bytes()
 					if err != nil {
 						l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
 						continue
 					}
 
-					saverr := l.saveLogToFile(logBytes, fmt.Sprintf("log-%s.json", time.Now().Format(time.RFC3339Nano)))
-					if saverr != nil {
-						fmt.Println(err)
+					offsaveErr = l.saveLogToFile(logBytes, fmt.Sprintf("log-%s.json", time.Now().Format(time.RFC3339Nano)))
+					if offsaveErr != nil {
+						fmt.Println(offsaveErr)
 					}
 				}
 
