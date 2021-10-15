@@ -154,7 +154,7 @@ func (l *StandardLogger) SendDebugfLog(message string, customFields map[string]i
 
 // SendFatalLog sends a log with fatal level to the log channel
 func (l *StandardLogger) SendFatalLog(message string, customFields map[string]interface{}) {
-	go func() {
+	func() {
 		l.logChan <- Log{
 			Message:      message,
 			CustomFields: customFields,
