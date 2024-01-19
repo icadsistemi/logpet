@@ -2,6 +2,7 @@ package logpet
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -19,7 +20,7 @@ func (l *StandardLogger) LogAPIGatewayProxyRequest(event events.APIGatewayProxyR
 	headers := make(map[string]string, len(event.Headers))
 
 	for key, value := range event.Headers {
-		if key == "Authorization" {
+		if key == "Authorization" || strings.ToLower(key) == "x-api-key" {
 			continue
 		}
 		headers[key] = value
