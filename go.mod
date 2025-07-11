@@ -1,6 +1,6 @@
 module github.com/icadsistemi/logpet
 
-go 1.13
+go 1.12
 
 require (
 	github.com/aws/aws-lambda-go v1.37.0
