@@ -113,6 +113,11 @@ func (l *StandardLogger) SendOfflineLogs() error {
 // the logs older than startingFrom will be deleted without sending them
 func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 
+	// if localMode is true, this function shouldn't be call, return an error
+	if l.localMode {
+		return fmt.Errorf("ReplayOfflineLog | logger localMode is set to true, cannot send offline log")
+	}
+
 	// read the files
 	files, err := ioutil.ReadDir(l.offlineLogsPath)
 	if err != nil {
