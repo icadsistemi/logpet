@@ -117,7 +117,7 @@ func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 
 	// if localMode is true, this function shouldn't be call, return an error
 	if l.localMode {
-		return fmt.Errorf("ReplayOfflineLog | logger localMode is set to true, cannot send offline log")
+		return fmt.Errorf("SendOfflineLogsV2 | logger localMode is set to true, cannot send offline log")
 	}
 
 	// read the files
@@ -132,7 +132,7 @@ func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 
 		// filter by .json extension and "log-" prefix
 		if filepath.Ext(name) != ".json" || !strings.HasPrefix(name, LOG_FILE_PREFIX) {
-			l.SendErrfLog("SendOfflineLogsV2 | skip file %s because has not .json extension or properly name", nil, name)
+			fmt.Printf("SendOfflineLogsV2 | skip file %s because has not .json extension or properly name", name)
 			continue
 		}
 
@@ -143,7 +143,7 @@ func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 		// parse the date
 		parsedDate, err := time.Parse(LOG_FILE_DATE_LAYOUT, datePart)
 		if err != nil {
-			l.SendErrfLog("SendOfflineLogsV2 | skip file %s because unable to parse date from its name: %v", nil, name, err)
+			// l.SendErrfLog("SendOfflineLogsV2 | skip file %s because unable to parse date from its name: %v", nil, name, err)
 			continue
 		}
 
@@ -154,14 +154,14 @@ func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 			// read file content
 			logRawContent, err := ioutil.ReadFile(filePath)
 			if err != nil {
-				l.SendErrfLog("SendOfflineLogsV2 | failed to read file %s: %v", nil, filePath, err)
+				fmt.Printf("SendOfflineLogsV2 | failed to read file %s: %v", filePath, err)
 				continue
 			}
 
 			// try to send to datadog
 			err = l.ReplayOfflineLog(string(logRawContent))
 			if err != nil {
-				l.SendErrfLog("SendOfflineLogsV2 | failed to resend offline log %s: %v", nil, filePath, err)
+				fmt.Printf("SendOfflineLogsV2 | failed to resend offline log %s: %v", filePath, err)
 				continue
 			}
 		}
@@ -169,7 +169,7 @@ func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 		// delete the log
 		err = os.Remove(filePath)
 		if err != nil {
-			l.SendErrfLog("SendOfflineLogsV2 | error deleting file %s: %v", nil, filePath, err)
+			fmt.Printf("SendOfflineLogsV2 | error deleting file %s: %v", filePath, err)
 			continue
 		}
 
