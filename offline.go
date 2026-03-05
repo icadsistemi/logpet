@@ -21,7 +21,7 @@ func (l *StandardLogger) saveLogToFile(toSave []byte, filename string) error {
 
 	_, err := os.Stat(l.offlineLogsPath)
 	if os.IsNotExist(err) {
-		err = os.Mkdir(l.offlineLogsPath, 0644)
+		err = os.Mkdir(l.offlineLogsPath, 0755)
 		if err != nil {
 			return err
 		}
