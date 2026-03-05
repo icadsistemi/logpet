@@ -152,7 +152,7 @@ func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 		// if the log older than startingFrom, send it
 		if parsedDate.After(startingFrom) {
 			// read file content
-			logRawContent, err := os.ReadFile(filePath)
+			logRawContent, err := ioutil.ReadFile(filePath)
 			if err != nil {
 				l.SendErrfLog("SendOfflineLogsV2 | failed to read file %s: %v", nil, filePath, err)
 				continue
