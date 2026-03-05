@@ -46,6 +46,8 @@ func (l *StandardLogger) saveLogToFile(toSave []byte, filename string) error {
 	return nil
 }
 
+// SendOfflineLogs send the offline logs but without extra information
+// Deprecated: use SendOfflineLogsV2, new version able to filter logs and re-send as original log
 func (l *StandardLogger) SendOfflineLogs() error {
 
 	dir, err := ioutil.ReadDir(l.offlineLogsPath)

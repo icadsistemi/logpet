@@ -34,6 +34,7 @@ type Log struct {
 }
 
 // ClientLog is a struct used for offline logs
+// Deprecated: use OfflineLog instead
 type ClientLog struct {
 	Level   string `json:"status,omitempty"`
 	Message string `json:"message,omitempty"`
