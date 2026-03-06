@@ -158,12 +158,13 @@ func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 				fmt.Printf("SendOfflineLogsV2 | unable to open file %s", filePath)
 				continue
 			}
-			defer file.Close()
 
 			var buf bytes.Buffer
 			_, err = buf.ReadFrom(file)
+			file.Close() // close the file otherwise will be impossible to delete
 			if err != nil {
 				fmt.Printf("SendOfflineLogsV2 | unable to read file %s", filePath)
+				continue
 			}
 
 			logRawContent := buf.Bytes()
