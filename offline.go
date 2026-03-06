@@ -1,6 +1,7 @@
 package logpet
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -152,11 +153,20 @@ func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
 		// if the log older than startingFrom, send it
 		if parsedDate.After(startingFrom) {
 			// read file content
-			logRawContent, err := ioutil.ReadFile(filePath)
+			file, err := os.Open(filePath)
 			if err != nil {
-				fmt.Printf("SendOfflineLogsV2 | failed to read file %s: %v", filePath, err)
+				fmt.Printf("SendOfflineLogsV2 | unable to open file %s", filePath)
 				continue
 			}
+			defer file.Close()
+
+			var buf bytes.Buffer
+			_, err = buf.ReadFrom(file)
+			if err != nil {
+				fmt.Printf("SendOfflineLogsV2 | unable to read file %s", filePath)
+			}
+
+			logRawContent := buf.Bytes()
 
 			// try to send to datadog
 			err = l.ReplayOfflineLog(string(logRawContent))
