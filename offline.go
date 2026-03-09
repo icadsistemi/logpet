@@ -1,6 +1,7 @@
 package logpet
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 func (l *StandardLogger) EnableOfflineLogs(enable bool) {
@@ -18,7 +22,7 @@ func (l *StandardLogger) saveLogToFile(toSave []byte, filename string) error {
 
 	_, err := os.Stat(l.offlineLogsPath)
 	if os.IsNotExist(err) {
-		err = os.Mkdir(l.offlineLogsPath, 0644)
+		err = os.Mkdir(l.offlineLogsPath, 0755)
 		if err != nil {
 			return err
 		}
@@ -43,6 +47,8 @@ func (l *StandardLogger) saveLogToFile(toSave []byte, filename string) error {
 	return nil
 }
 
+// SendOfflineLogs send the offline logs but without extra information
+// Deprecated: use SendOfflineLogsV2, new version able to filter logs and re-send as original log
 func (l *StandardLogger) SendOfflineLogs() error {
 
 	dir, err := ioutil.ReadDir(l.offlineLogsPath)
@@ -100,6 +106,132 @@ func (l *StandardLogger) SendOfflineLogs() error {
 				l.SendErrfLog("unable to remove file %s due to %v", nil, file.Name(), err)
 			}
 		}
+	}
+
+	return nil
+}
+
+// SendOfflineLogsV2 iterate the offline logs and try to send them to datadog
+// startingFrom param is used as a filter to send to datadog only the logs greater than that date
+// the logs older than startingFrom will be deleted without sending them
+func (l *StandardLogger) SendOfflineLogsV2(startingFrom time.Time) error {
+
+	// if localMode is true, this function shouldn't be call, return an error
+	if l.localMode {
+		return fmt.Errorf("SendOfflineLogsV2 | logger localMode is set to true, cannot send offline log")
+	}
+
+	// read the files
+	files, err := ioutil.ReadDir(l.offlineLogsPath)
+	if err != nil {
+		return fmt.Errorf("SendOfflineLogsV2 | error during readRir at path %s: %v", l.offlineLogsPath, err)
+	}
+
+	// iterate files to parse them and extract informations
+	for _, file := range files {
+		name := file.Name()
+
+		// filter by .json extension and "log-" prefix
+		if filepath.Ext(name) != ".json" || !strings.HasPrefix(name, LOG_FILE_PREFIX) {
+			fmt.Printf("SendOfflineLogsV2 | skip file %s because has not .json extension or properly name", name)
+			continue
+		}
+
+		// extract the date part: remove prefix "log-" and suffix ".json"
+		datePart := strings.TrimPrefix(name, LOG_FILE_PREFIX)
+		datePart = strings.TrimSuffix(datePart, ".json")
+
+		// parse the date
+		parsedDate, err := time.Parse(LOG_FILE_DATE_LAYOUT, datePart)
+		if err != nil {
+			// l.SendErrfLog("SendOfflineLogsV2 | skip file %s because unable to parse date from its name: %v", nil, name, err)
+			continue
+		}
+
+		filePath := filepath.Join(l.offlineLogsPath, name)
+
+		// if the log older than startingFrom, send it
+		if parsedDate.After(startingFrom) {
+			// read file content
+			file, err := os.Open(filePath)
+			if err != nil {
+				fmt.Printf("SendOfflineLogsV2 | unable to open file %s", filePath)
+				continue
+			}
+
+			var buf bytes.Buffer
+			_, err = buf.ReadFrom(file)
+			file.Close() // close the file otherwise will be impossible to delete
+			if err != nil {
+				fmt.Printf("SendOfflineLogsV2 | unable to read file %s", filePath)
+				continue
+			}
+
+			logRawContent := buf.Bytes()
+
+			// try to send to datadog
+			err = l.ReplayOfflineLog(string(logRawContent))
+			if err != nil {
+				fmt.Printf("SendOfflineLogsV2 | failed to resend offline log %s: %v", filePath, err)
+				continue
+			}
+		}
+
+		// delete the log
+		err = os.Remove(filePath)
+		if err != nil {
+			fmt.Printf("SendOfflineLogsV2 | error deleting file %s: %v", filePath, err)
+			continue
+		}
+
+	}
+
+	return nil
+}
+
+// ReplayOfflineLog try to send an offline log to DD starting from the raw json offline log
+// never ignore the debug level, because if the file is present, means that should be send to DD
+func (l *StandardLogger) ReplayOfflineLog(rawJSON string) error {
+
+	// if localMode is true, this function shouldn't be call, return an error
+	if l.localMode {
+		return fmt.Errorf("ReplayOfflineLog | logger localMode is set to true, cannot send offline log")
+	}
+
+	var offlineLog OfflineLog
+	if err := json.Unmarshal([]byte(rawJSON), &offlineLog); err != nil {
+		return fmt.Errorf("ReplayOfflineLog | failed to unmarshal raw json: %w", err)
+	}
+
+	// put on the log the original time
+	entry := l.Logger.WithTime(offlineLog.ClientTime)
+
+	// put on the log the original custom fields
+	if len(offlineLog.CustomFields) > 0 {
+		entry = entry.WithFields(logrus.Fields(offlineLog.CustomFields))
+	}
+
+	entry.Message = offlineLog.Message
+	switch offlineLog.Level {
+	case "info":
+		entry.Level = logrus.InfoLevel
+	case "warning":
+		entry.Level = logrus.WarnLevel
+	case "error":
+		entry.Level = logrus.ErrorLevel
+	case "debug":
+		entry.Level = logrus.DebugLevel
+	case "fatal":
+		entry.Level = logrus.FatalLevel
+	default:
+		return fmt.Errorf("ReplayOfflineLog | offline log level %s not matching any logrus standard levels", offlineLog.Level)
+	}
+
+	entry.Data["ddsource"] = "logpet"
+
+	err := l.sendLogToDD(entry, l.httpClient)
+	if err != nil {
+		return fmt.Errorf("ReplayOfflineLog | error sending log to datadog: %v", err)
 	}
 
 	return nil
