@@ -180,55 +180,67 @@ func (l *StandardLogger) startLogRoutineListener() {
 			continue
 		}
 
-		newLog := l.AddCustomFields()
-		newLog.Message = logElem.Message
-		newLog.Level = logElem.Level
-		newLog.Time = time.Now()
+		l.processLogElem(logElem)
+	}
+}
 
-		newLog.Data["ddsource"] = "logpet"
+// processLogElem builds, dispatches and (if needed) terminates the process
+// for a single log entry. The defer guarantees that a Fatal log always
+// triggers os.Exit(1), even if the dispatch to Datadog fails or an early
+// return/continue-equivalent happens inside this function.
+func (l *StandardLogger) processLogElem(logElem Log) {
 
-		for key, value := range logElem.CustomFields {
-			newLog.Data[key] = value
-		}
-
-		logBytes, err := newLog.Bytes()
-		if err != nil {
-			l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
-			continue
-		}
-
-		// If localMode is true print the log with Println
-		if l.localMode {
-			fmt.Println(string(logBytes))
-		} else {
-			err := l.sendLogToDD(newLog, l.httpClient)
-			if err != nil {
-				log.Printf("unable to send log to DataDog, %v", err)
-				if l.saveOfflineLogs {
-					var offsaveErr error
-
-					newLog.Message = fmt.Sprintf("OFFLINE LOG at %v | %s", time.Now().String(), newLog.Message)
-
-					logBytes, offsaveErr = newLog.Bytes()
-					if offsaveErr != nil {
-						l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", offsaveErr), nil)
-						continue
-					}
-
-					offsaveErr = l.saveLogToFile(logBytes, fmt.Sprintf("log-%s.json", time.Now().Format(time.RFC3339Nano)))
-					if offsaveErr != nil {
-						fmt.Println(offsaveErr)
-					}
-				}
-
-				continue
-			}
-		}
-
-		// If it's a fatal log exit
+	// in case of FatalLevel log, exit after function ending
+	defer func() {
 		if logElem.Level == logrus.FatalLevel {
 			os.Exit(1)
 		}
+	}()
+
+	newLog := l.AddCustomFields()
+	newLog.Message = logElem.Message
+	newLog.Level = logElem.Level
+	newLog.Time = time.Now()
+
+	newLog.Data["ddsource"] = "logpet"
+
+	for key, value := range logElem.CustomFields {
+		newLog.Data[key] = value
+	}
+
+	logBytes, err := newLog.Bytes()
+	if err != nil {
+		l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", err), nil)
+		return
+	}
+
+	// If localMode is true print the log with Println
+	if l.localMode {
+		fmt.Println(string(logBytes))
+		return
+	}
+
+	err = l.sendLogToDD(newLog, l.httpClient)
+	if err == nil {
+		return
+	}
+
+	log.Printf("unable to send log to DataDog, %v", err)
+
+	if !l.saveOfflineLogs {
+		return
+	}
+
+	newLog.Message = fmt.Sprintf("OFFLINE LOG at %v | %s", time.Now().String(), newLog.Message)
+
+	logBytes, offsaveErr := newLog.Bytes()
+	if offsaveErr != nil {
+		l.SendWarnLog(fmt.Sprintf("error converting log to bytes %v", offsaveErr), nil)
+		return
+	}
+
+	if offsaveErr = l.saveLogToFile(logBytes, fmt.Sprintf("log-%s.json", time.Now().Format(time.RFC3339Nano))); offsaveErr != nil {
+		fmt.Println(offsaveErr)
 	}
 }
 
@@ -269,7 +281,7 @@ func (l *StandardLogger) sendLogToDD(log *logrus.Entry, httpClient *http.Client)
 
 	// if not ok return an error
 	if resp.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("error when sending logs to DD | Status: %s %v", resp.Status, err))
+		return fmt.Errorf("error when sending logs to DD | Status: %s %v", resp.Status, err)
 	}
 
 	return nil
